@@ -9,6 +9,8 @@
 
 namespace Mango\Bundle\JsonApiBundle\Representation;
 
+use Traversable;
+
 /**
  * PaginatedRepresentation.
  *
@@ -106,13 +108,15 @@ class PaginatedRepresentation
     }
 
     /**
-     * @return int
+     * @return int|null
      */
     public function getNextPage()
     {
         if ($this->hasNextPage()) {
             return $this->page + 1;
         }
+
+        return null;
     }
 
     /**
@@ -124,12 +128,14 @@ class PaginatedRepresentation
     }
 
     /**
-     * @return int
+     * @return int|null
      */
     public function getPreviousPage()
     {
         if ($this->hasPreviousPage()) {
             return $this->page - 1;
         }
+
+        return null;
     }
 }

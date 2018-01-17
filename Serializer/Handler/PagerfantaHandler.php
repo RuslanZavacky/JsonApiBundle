@@ -22,18 +22,24 @@ class PagerfantaHandler extends AbstractPaginationHandler
      */
     public static function getType()
     {
-        return 'Pagerfanta\Pagerfanta';
+        return Pagerfanta::class;
     }
 
     /**
-     * @param Pagerfanta $object
+     * @param mixed $object
      *
      * @return PaginatedRepresentation
+     * @throws \Exception
      */
     protected function createPaginatedRepresentation($object)
     {
         if (!$object instanceof Pagerfanta) {
-            return;
+            throw new \Exception(
+                sprintf(
+                    'Wrong parameter given. Expected instance of "%s"',
+                    'Pagerfanta\Pagerfanta'
+                )
+            );
         }
 
         $items = $object->getCurrentPageResults();

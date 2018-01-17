@@ -29,6 +29,10 @@ final class Serializer implements SerializerInterface
      */
     private $exclusionStrategy;
 
+    /**
+     * @param SerializerInterface        $jmsSerializer
+     * @param ExclusionStrategyInterface $exclusionStrategy
+     */
     public function __construct(SerializerInterface $jmsSerializer, ExclusionStrategyInterface $exclusionStrategy)
     {
         $this->jmsSerializer = $jmsSerializer;

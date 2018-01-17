@@ -40,7 +40,7 @@ class Route
      * @param bool         $absolute
      * @param string|null  $generator
      */
-    public function __construct($name, $parameters = array(), $absolute = false, $generator = null)
+    public function __construct($name, $parameters = [], $absolute = false, $generator = null)
     {
         $this->name = $name;
         $this->parameters = $parameters;

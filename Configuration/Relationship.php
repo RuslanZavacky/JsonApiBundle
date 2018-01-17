@@ -35,6 +35,13 @@ class Relationship
     protected $showLinkSelf = false;
 
     /**
+     * Absolute urls
+     *
+     * @var bool
+     */
+    protected $absolute = false;
+
+    /**
      * @var bool
      */
     protected $showLinkRelated = false;
@@ -45,9 +52,16 @@ class Relationship
      * @param bool|false $showData
      * @param bool|false $showLinkSelf
      * @param bool|false $showLinkRelated
+     * @param bool|false $absolute
      */
-    public function __construct($name, $includedByDefault = null, $showData = null, $showLinkSelf = null, $showLinkRelated = null)
-    {
+    public function __construct(
+        $name,
+        $includedByDefault = null,
+        $showData = null,
+        $showLinkSelf = null,
+        $showLinkRelated = null,
+        $absolute = null
+    ) {
         $this->name = $name;
 
         if (null !== $includedByDefault) {
@@ -64,6 +78,10 @@ class Relationship
 
         if (null !== $showLinkRelated) {
             $this->showLinkRelated = $showLinkRelated;
+        }
+
+        if (null !== $absolute) {
+            $this->absolute = $absolute;
         }
     }
 
@@ -121,5 +139,13 @@ class Relationship
     public function getShowLinkRelated()
     {
         return $this->showLinkRelated;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAbsolute()
+    {
+        return $this->absolute;
     }
 }

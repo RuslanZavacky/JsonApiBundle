@@ -17,6 +17,18 @@ namespace Mango\Bundle\JsonApiBundle\Configuration\Annotation;
  */
 final class Resource
 {
+    /**
+     * @var string
+     */
     public $type;
+
+    /**
+     * @var bool
+     */
     public $showLinkSelf;
+
+    /**
+     * @var bool
+     */
+    public $absolute;
 }
