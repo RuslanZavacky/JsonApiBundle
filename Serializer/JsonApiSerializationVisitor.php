@@ -19,6 +19,7 @@ use JMS\Serializer\Naming\PropertyNamingStrategyInterface;
 use Mango\Bundle\JsonApiBundle\Configuration\Metadata\ClassMetadata as JsonApiClassMetadata;
 use Mango\Bundle\JsonApiBundle\EventListener\Serializer\JsonEventSubscriber;
 use Metadata\MetadataFactoryInterface;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
 use PhpOption\None;
 use Symfony\Component\ExpressionLanguage;
 
@@ -37,6 +38,9 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected $showVersionInfo;
 
+    /**
+     * @var bool
+     */
     protected $isJsonApiDocument = false;
 
   /**
@@ -78,6 +82,10 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
             $data = $root;
         }
 
+        if (($data instanceof \Traversable) && count($data) === 0 && !$this->isResource($data)) {
+            $data = [];
+        }
+
         $this->isJsonApiDocument = $this->validateJsonApiDocument($data);
 
         if ($this->isJsonApiDocument) {
@@ -92,11 +100,25 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
         return $root;
     }
 
+    /**
+     * Build json api root
+     *
+     * @param mixed      $data
+     * @param array|null $meta
+     *
+     * @return array
+     */
     protected function buildJsonApiRoot($data, array $meta = null)
     {
-        $root = array(
-            'data' => $data,
-        );
+        if ($data instanceof ConstraintViolationListInterface) {
+            $root = [
+                'errors' => $data,
+            ];
+        } else {
+            $root = [
+                'data' => $data,
+            ];
+        }
 
         if ($meta) {
             $root['meta'] = $meta;
@@ -117,7 +139,19 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
      */
     protected function validateJsonApiDocument($data)
     {
+        if (is_null($data)) {
+            return true;
+        }
+
+        if (is_array($data)) {
+            return true;
+        }
+
         if ((is_array($data) || $data instanceof \Traversable) && count($data) > 0 && $this->hasResource($data)) {
+            return true;
+        }
+
+        if ($data instanceof ConstraintViolationListInterface) {
             return true;
         }
 
@@ -135,18 +169,14 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
 
         $root = $this->getRoot();
 
-        // TODO: Error handling
-        if (isset($root['data']) && array_key_exists('errors', $root['data'])) {
-            return parent::getResult();
-        }
-
         if ($root) {
             $data = array();
             $meta = array();
             $included = array();
             $links = array();
+            $errors = array();
 
-            if (isset($root['data'])) {
+            if (array_key_exists('data', $root)) {
                 $data = $root['data'];
             }
 
@@ -162,14 +192,20 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 $links = $root['links'];
             }
 
-            // filter out duplicate primary resource objects that are in `included`
-            $included = array_udiff(
-                (array) $included,
-                (isset($data['type'])) ? array($data) : $data,
-                function ($a, $b) {
-                    return strcmp($a['type'].$a['id'], $b['type'].$b['id']);
-                }
-            );
+            if (isset($root['errors'])) {
+                $errors = $root['errors'];
+            }
+
+            if (!is_null($data)) {
+                // filter out duplicate primary resource objects that are in `included`
+                $included = array_udiff(
+                    (array) $included,
+                    (isset($data['type'])) ? array($data) : $data,
+                    function ($a, $b) {
+                        return strcmp($a['type'].$a['id'], $b['type'].$b['id']);
+                    }
+                );
+            }
 
             // start building new root array
             $root = array();
@@ -188,10 +224,13 @@ class JsonApiSerializationVisitor extends JsonSerializationVisitor
                 $root['links'] = $links;
             }
 
-            $root['data'] = $data;
-
-            if ($included) {
-                $root['included'] = array_values($included);
+            if (is_array($errors) && count($errors) > 0) {
+                $root['errors'] = $errors;
+            } else {
+                $root['data'] = $data;
+                if ($included) {
+                    $root['included'] = array_values($included);
+                }
             }
 
             $this->setRoot($root);
